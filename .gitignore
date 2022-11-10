@@ -1,0 +1,10 @@
+.Rhistory
+*.gz
+*.csv
+foo.py
+Intermediate.txt
+*.tfam
+*.tped
+*.md
+*.R
+LICENSE
