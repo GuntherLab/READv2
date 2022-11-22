@@ -119,7 +119,7 @@ except IOError:
 	print("the file %s.tped does not exist" % Arguments[0])
 	sys.exit(1)
 
-InfileName_tfam=Arguments[0]+'.tfam'
+InfileName_tfam=Arguments[0] + '.tfam'
 try:
 	InFile_tfam = open(InfileName_tfam,'r')
 except IOError:
