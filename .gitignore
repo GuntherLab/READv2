@@ -1,5 +1,7 @@
 .Rhistory
 *.gz
+myname.pdf
+foo.csv
 *.csv
 foo.py
 Intermediate.txt
