@@ -10,3 +10,6 @@ Intermediate.txt
 *.md
 *.R
 LICENSE
+*.out
+*.txt
+angsd_200K.file

@@ -8,6 +8,8 @@ from plinkio import plinkfile
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
+import os
+import glob
 from statistics import mean, median
 from operator import index
 from cmath import sqrt
@@ -19,7 +21,7 @@ def standard_error(x):
     return (statistics.stdev(x) / sqrt(len(x)))
 
 
-Usage = """ 
+Usage = """
 
 Current READ version only supports .tped files.
 
@@ -42,10 +44,10 @@ print("    ===Thank you for using Relationship Estimation from Ancient DNA (READ
 # turn of interactive plotting, does not show the plot unless plt.show() is used.
 plt.ioff()
 
-
+'''
 def Ind_list():  # adds the individual pairs that exists in the sample in List_individiuals list
     for idx1, j in enumerate(list_all_individuals):
-        for idx2, i in enumerate(list_2_all_individuals):
+        for idx2, i in enumerate(list_all_individuals):
             # if same individuals or this comparison is done before: ignore.
             if (i == j or idx1 >= idx2):
                 continue
@@ -53,16 +55,36 @@ def Ind_list():  # adds the individual pairs that exists in the sample in List_i
                 dictionary_pair_individuals["%s%s" % (j, i)] = 0
                 dictionary_pair_individuals_missinginfo["%s%s" % (j, i)] = 0
                 List_individuals.append("%s%s" % (j, i))
+'''
+
+
+def Pair_Calc(window):
+    # print(window)
+    missing = np.count_nonzero(window == -1)
+    full_call = window.size
+    # print("Window size:", window.size)
+    # print("Missing: ", missing)
+    full_call_var_corrected = full_call - missing
+    # print("Full call var: ", full_call_var_corrected)
+    if (full_call_var_corrected != 0):
+        valor = np.count_nonzero(window == 1)
+        IBS0 = np.count_nonzero(window == 0)
+        # print("Full call corr:", full_call_var_corrected, "valor: ", valor, "IBS0: ", IBS0)
+        P0 = float(IBS0)/full_call_var_corrected
+        P2 = float(valor)/full_call_var_corrected
+        # print("P0: ", P0, "P2:", P2)
+        Line_info = [pair, valor, IBS0, P2, P0]
+        pair_matrix.append(Line_info)
 
 
 Arguments = sys.argv[1:]
 norm_method = "median"
 norm_value = ''
 window_size = 100000
-dictionary_pair_individuals = {}
-dictionary_pair_individuals_missinginfo = {}
+# dictionary_pair_individuals = {}
+# dictionary_pair_individuals_missinginfo = {}
 list_all_individuals = []
-list_2_all_individuals = []
+# list_2_all_individuals=[]
 previous_window = 0
 Missing_info = 0
 IBS2 = 0
@@ -70,10 +92,12 @@ IBS0 = 0
 Total_snps_window = 0
 full_call_var = 0
 full_call_var_corrected = 0
-pair_matrix = []  # a dict. to hold pair snp info, window info etc.
+ind_dict = {}  # a dict. to hold ind. snp info
+pair_dict = {}  # a dict. to hold pair snp info
+pair_matrix = []
 List_individuals = []
 
-#print("Starting pairwise comparisons in windows", end='\n')
+# print("Starting pairwise comparisons in windows", end='\n')
 
 
 previous_window = 0
@@ -99,20 +123,69 @@ if ("--window_size" in Arguments):
 plink_file = plinkfile.open(Arguments[0])
 
 sample_list = plink_file.get_samples()
-locus_list = plink_file.get_loci()
+# locus_list = plink_file.get_loci()
+# print(locus_list.bp_position)
 for sample in sample_list:
     list_all_individuals.append(sample.iid)
-list_2_all_individuals.extend(list_all_individuals)
 
-Ind_list()
-#del sample_list
+
+# Ind_list()
+# del sample_list
 # locus.bp_position -> base pair position, locus.allele* gives the alleles in that position.
 
 start_time = time.time()
 tmp_list = []
 tmp_count = 0
+
+# rows = np.fromiter(plink_file, int)
+plink_file.transpose(Arguments[0] + "_test")
+plink_file.close()
+plink_file = plinkfile.open(Arguments[0] + "_test")
+i = 0
+# prep. np arrays for each individual
+locus_list = plink_file.get_loci()
+locus_pos = np.array(list(map(lambda d: d.bp_position, locus_list)))
+locus_pos = np.floor_divide(locus_pos, window_size)
+# print(locus_pos[-50:])
+windows = np.where(locus_pos[:-1] != locus_pos[1:])[0]
+# print(windows[-50:])
+for row in plink_file:
+    # row_array = np.array(row)
+    # res_row = np.where(row_array == 3, np.nan, row_array)
+    ind_dict[list_all_individuals[i]] = np.array(row)
+    i += 1
+
+keys = ind_dict.keys()
+for key in keys:
+    for key2 in keys:
+        if (not (key == key2) and not (key2+key in pair_dict.keys())):
+            nan_indices = np.union1d(np.where(
+                ind_dict[key] == 3), np.where(
+                ind_dict[key2] == 3))
+            # print(type(nan_indices), nan_indices.size)
+            pair_dict[key+key2] = 1 * (ind_dict[key] == ind_dict[key2])
+            pair_dict[key+key2][nan_indices] = -1
+            # print(-1 in pair_dict[key+key2])  # float nans?
+
+for key in pair_dict.keys():
+    pair = key
+    arr = pair_dict[pair]
+    pre_ind = 0
+    for i in windows:
+        window = arr[pre_ind:i+1]
+        Pair_Calc(window)
+        pre_ind = i
+    window = arr[pre_ind:]  # for the last window
+    Pair_Calc(window)
+    pre_ind = 0
+
+print("PlinkIO Pairwise comparison with Numpy takes: --- %s seconds ---" %
+      (time.time() - start_time))
+pair_matrix = np.array(pair_matrix)  # is not size of (length,6) fix!
+# print(pair_matrix[:15])
+'''
 for locus, row in zip(locus_list, plink_file):
-    #snp_count = snp_count + 1
+    # snp_count = snp_count + 1
     # if (snp_count%10000)==0:
     #    print("Current position: Chromosome %s, bp %s" %(locus.chromosome,locus.bp_position))
     window_index = locus.bp_position/window_size
@@ -146,10 +219,11 @@ for locus, row in zip(locus_list, plink_file):
                 # P1 referred as P2 here?
                 P2 = float(valor)/full_call_var_corrected
                 P0 = float(IBS0/full_call_var_corrected)
-                Line_info = [pair, locus.chromosome, valor, IBS0, P2, P0]
+                # Line_info = [pair, locus.chromosome, valor, IBS0, P2, P0]
+
                 # tmp_list.append(Line_info)
-                #tmp_count += 1
-                pair_matrix.extend(Line_info)
+                # tmp_count += 1
+                # pair_matrix.extend(Line_info)
             # if (tmp_count == 100):
             #    pair_matrix.extend(tmp_list)
             #    tmp_list = []
@@ -163,7 +237,7 @@ for locus, row in zip(locus_list, plink_file):
         previous_window = window_index
 
         for idx1, i in enumerate(list_all_individuals):
-            for idx2, j in enumerate(list_2_all_individuals):
+            for idx2, j in enumerate(list_all_individuals):
 
                 if (i == j or idx1 >= idx2):
                     continue
@@ -173,34 +247,34 @@ for locus, row in zip(locus_list, plink_file):
                 elif Alleles_individuals[idx1] == Alleles_individuals[idx2]:
                     dictionary_pair_individuals["%s%s" % (
                         list_all_individuals[idx1], list_all_individuals[idx2])] += 1
-
-
-print("PlinkIO Pairwise comparison takes: --- %s seconds ---" %
-      (time.time() - start_time))
-
 '''
-#print("Create matrix!")
+
+
+# print("Create matrix!")
 
 start_time = time.time()
 # try to write everything directly to dataframe in the beginning
 df_pair = pd.DataFrame(pair_matrix, columns=[
-                       'PairIndividuals', 'Chromosome', 'IBS2', 'IBS0', 'P1', 'P0'])
+                       'PairIndividuals', 'IBS2', 'IBS0', 'P1', 'P0'])
+
+df_pair = df_pair.astype(dtype={
+                         'PairIndividuals': str, 'IBS2': float, 'IBS0': float, 'P1': float, 'P0': float})
 
 print("Dataframe creation takes: --- %s seconds ---" %
       (time.time() - start_time))
 
-#print("Dataframe created.")
+# print("Dataframe created.")
 start_time = time.time()
 # print("")
-del dictionary_pair_individuals, dictionary_pair_individuals_missinginfo, locus_list, plink_file, pair_matrix
+del locus_list, plink_file, pair_matrix, ind_dict, pair_dict
 # sample_list=plink_file.get_samples()
-#print("Normalization started", end='\n')
+# print("Normalization started", end='\n')
 
 print("Deletion of unused variables takes: --- %s seconds ---" %
       (time.time() - start_time))
 
-
-#mean_2Allele_Diff_perc = df_pair.groupby(['PairIndividuals'])['P0'].mean()
+# print(df_pair['P0'][:15])
+# mean_2Allele_Diff_perc = df_pair.groupby(['PairIndividuals'])['P0'].mean()
 df_pair['2AlleleDiffMeanPerc'] = df_pair.groupby(
     ['PairIndividuals'])['P0'].transform('mean')
 
@@ -213,7 +287,7 @@ elif (norm_method == "max"):
 
 start_time = time.time()
 df_pair['Norm2AlleleDiff'] = df_pair['P0'] / norm_value
-#print("P0 Normalized")
+# print("P0 Normalized")
 means2Allele_Diff_Normalized = df_pair.groupby(
     ['PairIndividuals'])['Norm2AlleleDiff'].mean().to_frame()
 df_P0 = df_pair.groupby(['PairIndividuals'])['P0'].mean().to_frame()
@@ -231,7 +305,7 @@ print("Normalization takes: --- %s seconds ---" %
 
 
 start_time = time.time()
-#boxplot=df_P0.reset_index().boxplot(by = 'PairIndividuals',rot=90, figsize=((8+0.1*(len(df_P0.index)),6)))
+# boxplot=df_P0.reset_index().boxplot(by = 'PairIndividuals',rot=90, figsize=((8+0.1*(len(df_P0.index)),6)))
 boxplot = df_P0.plot(x='PairIndividuals', y='P0', kind="scatter", yerr='Error',
                      s=6, rot=90, figsize=((8+0.1*(len(df_P0.index)), 8)), fontsize=8)
 # hor. lines for 2nd degree
@@ -252,12 +326,12 @@ boxplot.text(0.55, (norm_value*0.625)+0.005,
              "Identical/Twin", size=9, color="purple")
 fig = boxplot.get_figure()
 fig.savefig('READ.pdf', format="pdf")
-#print("Plot created!")
+# print("Plot created!")
 
 print("Plotting takes: --- %s seconds ---" %
       (time.time() - start_time))
 
-#print("Estimating degree of relationships")
+# print("Estimating degree of relationships")
 
 
 # Paper mentions these cutoffs are expressed as multiples of the standard error of the mean (Z).
@@ -293,10 +367,10 @@ df_to_print['Rel'] = np.select(
 df_to_print['Zup'] = np.select(filters, values_Zup, default=np.abs(
     (0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff)/StError_2Allele_Norm.Norm2AlleleDiff))
 df_to_print['Zdown'] = np.select(filters, values_Zdown, default='NA')
-#df_to_print[['Zup', 'Zdown']]=df_to_print[['Zup', 'Zdown']].apply(pd.to_numeric, downcast = 'float',errors='coerce')
-#df_to_print['Zup']=pd.to_numeric(df_to_print['Zup'], errors="coerce")
-#df_to_print['Zdown']=pd.to_numeric(df_to_print['Zdown'], errors="coerce")
-#df_to_print=df_to_print['Zdown'].apply(np.absolute, na_action = 'ignore')
+# df_to_print[['Zup', 'Zdown']]=df_to_print[['Zup', 'Zdown']].apply(pd.to_numeric, downcast = 'float',errors='coerce')
+# df_to_print['Zup']=pd.to_numeric(df_to_print['Zup'], errors="coerce")
+# df_to_print['Zdown']=pd.to_numeric(df_to_print['Zdown'], errors="coerce")
+# df_to_print=df_to_print['Zdown'].apply(np.absolute, na_action = 'ignore')
 
 df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown']].to_csv(
     'Read_Results.tsv', index=False, sep='\t')
@@ -307,6 +381,8 @@ print("Printing takes: --- %s seconds ---" %
 
 # print('\n')
 ###
-
+fname = "./"+Arguments[0] + "_test*"
+for filename in glob.glob(fname):
+    # print(filename)
+    os.remove(filename)
 print("READ analysis finished. Please check Read_Results.tsv for results!")
-'''
