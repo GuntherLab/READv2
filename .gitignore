@@ -13,3 +13,10 @@ LICENSE
 *.out
 *.txt
 angsd_200K.file
+*.bamfiles
+*.png
+Outfile.tsv
+Results_*.tsv
+PairMatrixGen.py
+Grouping.py
+Read_Results.tsv
