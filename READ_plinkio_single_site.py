@@ -143,11 +143,11 @@ plink_file.close()
 plink_file = plinkfile.open(Arguments[0] + "_test")
 i = 0
 # prep. np arrays for each individual
-locus_list = plink_file.get_loci()
-locus_pos = np.array(list(map(lambda d: d.bp_position, locus_list)))
-locus_pos = np.floor_divide(locus_pos, window_size)
+#locus_list = plink_file.get_loci()
+#locus_pos = np.array(list(map(lambda d: d.bp_position, locus_list)))
+#locus_pos = np.floor_divide(locus_pos, window_size)
 # print(locus_pos[-50:])
-windows = np.where(locus_pos[:-1] != locus_pos[1:])[0]
+#windows = np.where(locus_pos[:-1] != locus_pos[1:])[0]
 # print(windows[-50:])
 for row in plink_file:
     # row_array = np.array(row)
@@ -170,6 +170,7 @@ for key in keys:
 for key in pair_dict.keys():
     pair = key
     arr = pair_dict[pair]
+    Pair_Calc(arr)
     pre_ind = 0
 
 
@@ -195,7 +196,7 @@ print("Dataframe creation takes: --- %s seconds ---" %
 # print("Dataframe created.")
 start_time = time.time()
 # print("")
-del locus_list, plink_file, pair_matrix, ind_dict, pair_dict
+del plink_file, pair_matrix, ind_dict, pair_dict
 # sample_list=plink_file.get_samples()
 # print("Normalization started", end='\n')
 
@@ -220,29 +221,27 @@ means2Allele_Diff_Normalized = df_pair.groupby(
     ['PairIndividuals'])['Norm2AlleleDiff'].mean().to_frame()
 df_P0 = df_pair.groupby(['PairIndividuals'])[
     'P0'].mean().to_frame()  # unnormalized P0
-StError_2Allele_Norm = df_pair.groupby(['PairIndividuals'])[
-    'Norm2AlleleDiff'].apply(standard_error).to_frame()  # normalized P0 standard error
-means2Allele_Diff_Normalized['StError_2Allele_Norm'] = StError_2Allele_Norm['Norm2AlleleDiff']
-Nonnormalized_P0_serr = df_pair.groupby(['PairIndividuals'])[
-    'P0'].apply(standard_error).to_frame()  # nonNormalized P0 standard error
+# StError_2Allele_Norm = df_pair.groupby(['PairIndividuals'])['Norm2AlleleDiff'].apply(standard_error).to_frame()  # normalized P0 standard error
+#means2Allele_Diff_Normalized['StError_2Allele_Norm'] = StError_2Allele_Norm['Norm2AlleleDiff']
+# Nonnormalized_P0_serr = df_pair.groupby(['PairIndividuals'])['P0'].apply(standard_error).to_frame()  # nonNormalized P0 standard error
 means2Allele_Diff_Normalized['Nonnormalized_P0'] = df_P0['P0']
-means2Allele_Diff_Normalized['Nonnormalized_P0_serr'] = Nonnormalized_P0_serr["P0"]
-df_P0['Error'] = Nonnormalized_P0_serr['P0'].values
+#means2Allele_Diff_Normalized['Nonnormalized_P0_serr'] = Nonnormalized_P0_serr["P0"]
+#df_P0['Error'] = Nonnormalized_P0_serr['P0'].values
 df_P0 = df_P0.reset_index()
 
 print("Normalization takes: --- %s seconds ---" %
       (time.time() - start_time))
 
 means2Allele_Diff_Normalized = means2Allele_Diff_Normalized.astype(
-    dtype={'Norm2AlleleDiff': np.float16, 'StError_2Allele_Norm': np.float16, 'Nonnormalized_P0': np.float16, 'Nonnormalized_P0_serr': np.float16})
-means2Allele_Diff_Normalized[['Norm2AlleleDiff', 'StError_2Allele_Norm', 'Nonnormalized_P0',
-                              'Nonnormalized_P0_serr']].to_csv("meansP0_AncientDNA_normalized_READv2", index=True, sep='\t')
+    dtype={'Norm2AlleleDiff': np.float16, 'Nonnormalized_P0': np.float16})
+means2Allele_Diff_Normalized[['Norm2AlleleDiff', 'Nonnormalized_P0']].to_csv(
+    "meansP0_AncientDNA_normalized_READv2", index=True, sep='\t')
 # print("Plotting!")
 
 
 start_time = time.time()
 # boxplot=df_P0.reset_index().boxplot(by = 'PairIndividuals',rot=90, figsize=((8+0.1*(len(df_P0.index)),6)))
-boxplot = df_P0.plot(x='PairIndividuals', y='P0', kind="scatter", yerr='Error',
+boxplot = df_P0.plot(x='PairIndividuals', y='P0', kind="scatter",
                      s=6, rot=90, figsize=((8+0.1*(len(df_P0.index)), 8)), fontsize=8)
 # hor. lines for 2nd degree
 boxplot.axhline(norm_value*0.90625, color="purple", alpha=0.2, lw=10)
@@ -281,18 +280,13 @@ filters = [
 values_Rel = ["Unrelated", "Second Degree", "First Degree"]
 values_Zup = [
     "NA",
-    np.absolute((0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff),
+    np.absolute(0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff),
+    np.absolute(0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff),
 ]
 values_Zdown = [
-    np.absolute((0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff)
+    np.absolute(0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff),
+    np.absolute(0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff),
+    np.absolute(0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff)
 ]
 
 df_to_print = pd.DataFrame(
@@ -300,8 +294,8 @@ df_to_print = pd.DataFrame(
 
 df_to_print['Rel'] = np.select(
     filters, values_Rel, default="IdenticalTwins/SameIndividual")
-df_to_print['Zup'] = np.select(filters, values_Zup, default=np.abs(
-    (0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff)/StError_2Allele_Norm.Norm2AlleleDiff))
+df_to_print['Zup'] = np.select(filters, values_Zup, default=np.abs
+                               (0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff))
 df_to_print['Zdown'] = np.select(filters, values_Zdown, default='NA')
 
 df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown']].to_csv(
