@@ -1,0 +1,29 @@
+PLINK v1.90b4.9 64-bit (13 Oct 2017)
+Options in effect:
+  --file Srubnaya.subset_ped
+  --make-bed
+  --out Srubnaya.subset_bed
+
+Hostname: r44.uppmax.uu.se
+Working directory: /crex/proj/human_evolution_msc/private/Erkin/read_new
+Start time: Tue Nov 22 12:59:46 2022
+
+Random number seed: 1669118386
+128373 MB RAM detected; reserving 64186 MB for main workspace.
+Scanning .ped file... done.
+Performing single-pass .bed write (1151240 variants, 14 people).
+--file: Srubnaya.subset_bed-temporary.bed + Srubnaya.subset_bed-temporary.bim +
+Srubnaya.subset_bed-temporary.fam written.
+1151240 variants loaded from .bim file.
+14 people (6 males, 8 females) loaded from .fam.
+14 phenotype values loaded from .fam.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 14 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.39689.
+1151240 variants and 14 people pass filters and QC.
+Among remaining phenotypes, 0 are cases and 14 are controls.
+--make-bed to Srubnaya.subset_bed.bed + Srubnaya.subset_bed.bim +
+Srubnaya.subset_bed.fam ... done.
+
+End time: Tue Nov 22 12:59:48 2022
