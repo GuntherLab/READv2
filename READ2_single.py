@@ -96,11 +96,7 @@ elif (len(Arguments) >= 2 and Arguments[1] not in ["median", "mean", "max", "val
 if (len(Arguments) >= 3 and Arguments[1] == "value"):
     norm_value = float(Arguments[2])
 if ("--window_size" in Arguments):
-    ws_index = Arguments.index("--window_size")
-    if (len(Arguments) > (ws_index+1)):
-        window_size = int(Arguments[ws_index+1])
-    else:
-        sys.exit("No window size specified!")
+    print("Window size is not valid in this version of READv2")
 
 plink_file = plinkfile.open(Arguments[0])
 
