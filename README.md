@@ -1,5 +1,7 @@
 # Relationship Estimation from Ancient DNA (READv2) #
 
+# PLEASE NOTE: This repository has been set to public to have a version of record for Erkin Alaçamlı's MSc thesis. READv2 development is still ongoing and we do not recommend to use it at this point. The README below might also be incomplete. #
+
 ## Requirements ##
 
 * Python 3.7 or higher
@@ -31,12 +33,6 @@ Assume you have READv2 and a pair of files example.bed, example.bim and example.
 This runs the READ script in default settings. The results of your READ analysis can be found in the two files READ_results and meansP0_AncientDNA_normalized. The main result file is READ_results. It contains four columns: the pair of individuals, the normalized mean P0 score for that pair and two columns showing how many standard errors that normalized mean P0 score is from a higher class of genetic difference (Z_upper, third column = distance to lower degrees of relationship) and a lower class of genetic difference (Z_lower, fourth column = distance to higher degrees of relationship). These values can be used to assess the certainty of the classification. We observed in our simulations that false classifications were enriched when the normalized mean P0 score were less than one standard error from the nearest threshold (i.e. |Z|<1). Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates.
 
 meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see below).
-
-or for the single site approach:
-
-    python READ2_single.py example
-
-Keep in mind that window related analyses will not be run with this option.
 
 #### Normalization ####
 
