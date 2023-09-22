@@ -19,7 +19,7 @@ import time
 
 Usage = """
 
-Current READ version only supports .tped files.
+Current READ version only supports .bed files.
 
 READ2.py <InputFile> <normalization> <normalization_value>
 
@@ -34,7 +34,7 @@ Optionally, one can add --window_size <value> at the end in order to modify the 
 
 """
 
-print("    ===Thank you for using Relationship Estimation from Ancient DNA (READ)===    ", end='\n\n')
+print("    ===Thank you for using Relationship Estimation from Ancient DNA version 2 (READv2)===    ", end='\n\n')
 
 
 # turn of interactive plotting, does not show the plot unless plt.show() is used.
@@ -54,11 +54,11 @@ def Pair_Calc(window, out_matrix):
         out_matrix.append(Line_info)
 
 
-def Perc_Calc(x):  # a function to calculate the proportion of windows that does not fall between 0.625 and 0.90625 for each pair
+def Perc_Calc(x):  # a function to calculate the proportion of windows that does not fall between deg_thresholds[2] and deg_thresholds[0] for each pair
     length_windows = len(x)
     cnt = 0
     for el in x:
-        if (el > 0.90625 or el < 0.625):
+        if (el > deg_thresholds[1] or el < deg_thresholds[3]):
              cnt += 1
     return (cnt/length_windows)
 
@@ -87,6 +87,9 @@ norm_method = "median"
 norm_value = ''
 window_size = 5000000 #default value chosen to correspond to commonly used blockJN block sizes, Readv1 default was 1000000
 window_size_1stdeg = 20000000
+deg_thresholds = [0.96875,0.90625,0.8125,0.625]
+effectiveSNP_cutoff_first = 10000
+effectiveSNP_cutoff_third = 7500
 Single_Sites = False
 Check_1stdeg_type = True
 list_all_individuals = []
@@ -126,6 +129,9 @@ if ("--window_size" in Arguments):
         sys.exit("No window size specified!")
 if ("--blocks" in Arguments):
     Single_Sites = True
+    print("Calculating genome-wide P0, Standard errors are calculated from a block-jackknife with a window size of %s bp." %window_size)
+if ("--2pow" in Arguments): #use updated degree thresholds
+    deg_thresholds = [1-1/(2**4.5),1-1/(2**3.5),1-1/(2**2.5),1-1/(2**1.5)]
 
 plink_file = plinkfile.open(Arguments[0])
 
@@ -292,20 +298,20 @@ if num_pairs<=1000:
                      s=6, rot=90, figsize=((8+0.1*(len(df_P0.index)), 8)), fontsize=8)
 
     # hor. lines for 2nd degree
-    boxplot.axhline(norm_value*0.90625, color="purple", alpha=0.2, lw=10)
-    boxplot.axhline(norm_value*0.90625, color="black", alpha=0.5, linestyle="--")
+    boxplot.axhline(norm_value*deg_thresholds[1], color="purple", alpha=0.2, lw=10)
+    boxplot.axhline(norm_value*deg_thresholds[1], color="black", alpha=0.5, linestyle="--")
     # why use normalized values while you have nonnormalized values in the graph.
-    boxplot.text(0.55, (norm_value*0.90625)-0.005,
+    boxplot.text(0.55, (norm_value*deg_thresholds[0])-0.005,
              "2nd degree", size=9, color="purple")
     # hor. lines for 1st degree
-    boxplot.axhline(norm_value*0.8125, color="purple", alpha=0.2, lw=10)
-    boxplot.axhline(norm_value*0.8125, color="black", alpha=0.5, linestyle="--")
-    boxplot.text(0.55, (norm_value*0.8125)-0.005,
+    boxplot.axhline(norm_value*deg_thresholds[2], color="purple", alpha=0.2, lw=10)
+    boxplot.axhline(norm_value*deg_thresholds[2], color="black", alpha=0.5, linestyle="--")
+    boxplot.text(0.55, (norm_value*deg_thresholds[1])-0.005,
              "1st degree", size=9, color="purple")
     # hor.lines for Identical/twins
-    boxplot.axhline(norm_value*0.625, color="purple", alpha=0.2, lw=10)
-    boxplot.axhline(norm_value*0.625, color="black", alpha=0.5, linestyle="--")
-    boxplot.text(0.55, (norm_value*0.625)+0.005,
+    boxplot.axhline(norm_value*deg_thresholds[3], color="purple", alpha=0.2, lw=10)
+    boxplot.axhline(norm_value*deg_thresholds[3], color="black", alpha=0.5, linestyle="--")
+    boxplot.text(0.55, (norm_value*deg_thresholds[2])+0.005,
              "Identical/Twin", size=9, color="purple")
     fig = boxplot.get_figure()
     fig.savefig('READ.pdf', format="pdf")
@@ -316,25 +322,30 @@ else:
 
 start_time = time.time()
 filters = [
-    means2Allele_Diff_Normalized.Norm2AlleleDiff >= 0.90625,
-    means2Allele_Diff_Normalized.Norm2AlleleDiff >= 0.8125,
-    means2Allele_Diff_Normalized.Norm2AlleleDiff >= 0.625
+    (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[0]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[1]) & (means2Allele_Diff_Normalized.NSNPsXNorm >= effectiveSNP_cutoff_third),
+    (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[1]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[2]),
+    (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[2]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[3]),
+    means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[3]
 ]
-values_Rel = ["Unrelated", "Second Degree", "First Degree"]
+values_Rel = ["Third Degree", "Second Degree", "First Degree",'IdenticalTwins/SameIndividual']
 values_Zup = [
-    "NA",
-    np.absolute((0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+    np.absolute((deg_thresholds[0]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+    np.absolute((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
+    np.absolute((deg_thresholds[2]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+                StError_2Allele_Norm.Norm2AlleleDiff),
+    np.absolute((deg_thresholds[3]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+                StError_2Allele_Norm.Norm2AlleleDiff)
 ]
 values_Zdown = [
-    np.absolute((0.90625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+    np.absolute((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.8125-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+    np.absolute((deg_thresholds[2]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
-    np.absolute((0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
-                StError_2Allele_Norm.Norm2AlleleDiff)
+    np.absolute((deg_thresholds[3]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+                StError_2Allele_Norm.Norm2AlleleDiff),
+    'NA'
 ]
 
 #var_df = df_pair.groupby(['PairIndividuals'])[
@@ -347,18 +358,21 @@ df_to_print = pd.DataFrame(
 
 
 df_to_print['Rel'] = np.select(
-    filters, values_Rel, default="IdenticalTwins/SameIndividual")
-df_to_print['Zup'] = np.select(filters, values_Zup, default=np.abs(
-    (0.625-means2Allele_Diff_Normalized.Norm2AlleleDiff)/StError_2Allele_Norm.Norm2AlleleDiff))
-df_to_print['Zdown'] = np.select(filters, values_Zdown, default='NA')
+    filters, values_Rel, default="Unrelated")
+#df_to_print['Zup'] = np.select(filters, values_Zup, default=np.abs(
+#    (deg_thresholds[3]-means2Allele_Diff_Normalized.Norm2AlleleDiff)/StError_2Allele_Norm.Norm2AlleleDiff))
+#df_to_print['Zdown'] = np.select(filters, values_Zdown, default='NA')
+df_to_print['Zup'] = np.select(filters, values_Zup, default='NA')
+df_to_print['Zdown'] = np.select(filters, values_Zdown, default=np.abs((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff)/StError_2Allele_Norm.Norm2AlleleDiff))
+
 
 filters_first_Deg = [
     (means2Allele_Diff_Normalized.Perc_P0 >= 0.6) & (
-        df_to_print.Rel == "First Degree"),
+        df_to_print.Rel == "First Degree") & (means2Allele_Diff_Normalized.NSNPsXNorm>=effectiveSNP_cutoff_first),
     (means2Allele_Diff_Normalized.Perc_P0 >= 0.35) & (
-        df_to_print.Rel == "First Degree"),
+        df_to_print.Rel == "First Degree") & (means2Allele_Diff_Normalized.NSNPsXNorm>=effectiveSNP_cutoff_first),
     (means2Allele_Diff_Normalized.Perc_P0 <= 0.3) & (
-        df_to_print.Rel == "First Degree")
+        df_to_print.Rel == "First Degree") & (means2Allele_Diff_Normalized.NSNPsXNorm>=effectiveSNP_cutoff_first)
 ]
 values_first_deg = [
     "NotApplicable", "Siblings", "Parent-offspring"
