@@ -151,6 +151,13 @@ sample_list = plink_file.get_samples()
 for sample in sample_list:
     list_all_individuals.append(sample.iid)
 
+if len(sample_list)<2:
+    print("At least two individuals are required to run READ")
+    sys.exit(1)
+
+if len(famlines)<4 and norm_method=="median":
+	print('Warning: Normalization using the median can be problematic for small sample sizes.')
+
 # locus.bp_position -> base pair position, locus.allele* gives the alleles in that position.
 
 start_time = time.time()
