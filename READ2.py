@@ -15,22 +15,26 @@ from operator import index
 from math import sqrt
 import statistics
 import time
+from optparse import OptionParser
 
+VERSION='v1.99'
 
 Usage = """
 
-Current READ version only supports .bed files.
+Options when running READv2:
 
-READ2.py <InputFile> <normalization> <normalization_value>
+\t -i, --input_file <val>\tInput file prefix (required). The current READ version only supports Plink bed/bim/fam files.
+\t -n, --norm_method <val>\tNormalization method (either 'mean', 'median', 'max' or 'value').
+\t\t\tmedian (default) - assuming that most pairs of compared individuals are unrelated, READ uses the median across all pairs for normalization.
+\t\t\tmean - READ uses the mean across all pairs for normalization, this would be more sensitive to outliers in the data (e.g. recent migrants or identical twins)
+\t\t\tmax - READ uses the maximum across all pairs for normalization. This should be used to test trios where both parents are supposed to be unrelated but the offspring is a first degree relative to both others.
+\t\t\tvalue - READ uses a user-defined value for normalization. This can be used if the value from another population should be used for normalization. That would be useful if only two individuals are available for the test population. Normalization value needs to be provided through --norm_value
+\t --window_size <val>\tChange window size for block jackknife or for window-based P0 estimates (as in READv1), default: 5000000
+\t --window_est\tWindow based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)
+\t -h, --help\tPrint this message
+\t -v, --version\tPrint version
 
-A normalization is only required when a user-defined values is used instead of the median, mean or maximum of the test population. All normalization settings are described below:
 
-    median (default) - assuming that most pairs of compared individuals are unrelated, READ uses the median across all pairs for normalization.
-    mean - READ uses the mean across all pairs for normalization, this would be more sensitive to outliers in the data (e.g. recent migrants or identical twins)
-    max - READ uses the maximum across all pairs for normalization. This should be used to test trios where both parents are supposed to be unrelated but the offspring is a first degree relative to both others.
-    value <val> - READ uses a user-defined value for normalization. This can be used if the value from another population should be used for normalization. That would be useful if only two individuals are available for the test population.
-
-Optionally, one can add --window_size <value> at the end in order to modify the window size used (default: 5000000).
 
 """
 
@@ -90,7 +94,7 @@ window_size_1stdeg = 20000000
 deg_thresholds = [0.96875,0.90625,0.8125,0.625]
 effectiveSNP_cutoff_first = 10000
 effectiveSNP_cutoff_third = 7500
-Single_Sites = False
+window_based = False
 Check_1stdeg_type = True
 list_all_individuals = []
 previous_window = 0
@@ -111,29 +115,37 @@ List_individuals = []
 previous_window = 0
 snp_count = 0
 
-# Input check!
-if (len(Arguments) == 0):
-    sys.exit(Usage)
+parser = OptionParser(usage=usage)
+parser.add_option("-i","--input",action="store",type='string',dest='infile',help="Prefix of input Plink bed/bim/fam files")
+parser.add_option("-n","--norm_method",action="store",type='string',dest='norm_method',help="Normalization method (either 'mean', 'median', 'max' or 'value')")
+parser.add_option("--norm_value", action="store",type="float", dest="norm_value",help="User-specified normalization value",default=0.0)
+parser.add_option("--window_size", action="store",type="int", dest="window_size",help="Window size (default 5000000)",default=5000000)
+parser.add_option("--window_est", action="store_true", dest="window_based",help="Window based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)",default=False)
+parser.add_option("--2pow", action="store_true", dest="2powthresh",help="Use alternative classification thresholds",default=False)
+parser.add_option("-h","--help", action="store_true", dest="print_help",help="Print help",default=False)
+parser.add_option("-v","--version", action="store_true", dest="print_vers",help="Print version",default=False)
 
-if (len(Arguments) >= 2 and Arguments[1] in ["median", "mean", "max", "value"]):
-    norm_method = Arguments[1]
-elif (len(Arguments) >= 2 and Arguments[1] not in ["median", "mean", "max", "value"]):
-    print("No valid standardization method specified! Using the default method.")
-if (len(Arguments) >= 3 and Arguments[1] == "value"):
-    norm_value = float(Arguments[2])
-if ("--window_size" in Arguments):
-    ws_index = Arguments.index("--window_size")
-    if (len(Arguments) > (ws_index+1)):
-        window_size = int(Arguments[ws_index+1])
-    else:
-        sys.exit("No window size specified!")
-if ("--blocks" in Arguments):
-    Single_Sites = True
-    print("Calculating genome-wide P0, Standard errors are calculated from a block-jackknife with a window size of %s bp." %window_size)
-if ("--2pow" in Arguments): #use updated degree thresholds
+if print_help:
+    print(Usage)
+    sys.exit(0)
+
+if print_vers:
+    print(VERSION)
+    sys.exit(0)
+
+
+if norm_method not in ["median", "mean", "max", "value"]):
+    print("No valid standardization method specified! Using the default method (i.e. median).")
+    norm_method='median'
+    
+if norm_method=='value' and norm_value<=0:
+    print('User-specified normalization value chosen but no valid value provided!!!')
+    sys.exit(1)
+
+if 2powthresh: #use updated degree thresholds
     deg_thresholds = [1-1/(2**4.5),1-1/(2**3.5),1-1/(2**2.5),1-1/(2**1.5)]
 
-plink_file = plinkfile.open(Arguments[0])
+plink_file = plinkfile.open(infile)
 
 sample_list = plink_file.get_samples()
 for sample in sample_list:
@@ -145,9 +157,9 @@ start_time = time.time()
 tmp_list = []
 tmp_count = 0
 
-plink_file.transpose(Arguments[0] + "_test")
+plink_file.transpose(infile + "_test")
 plink_file.close()
-plink_file = plinkfile.open(Arguments[0] + "_test")
+plink_file = plinkfile.open(infile + "_test")
 i = 0
 # prep. np arrays for each individual
 locus_list = plink_file.get_loci()
@@ -180,7 +192,7 @@ for key in keys:
             pair_dict[pair]=0
 
             arr = pairwise
-            if Single_Sites:
+            if not window_based:
                 Pair_Calc(arr, pair_matrix)
                 pre_ind = 0
                 for i in windows:
@@ -265,7 +277,7 @@ means2Allele_Diff_Normalized['NSNPsXNorm'] = means2Allele_Diff_Normalized['Overl
 df_P0 = df_pair.groupby(['PairIndividuals'])[
     'P0'].mean().to_frame()  # unnormalized P0
 
-if Single_Sites: #calculate SEs using a block jackknife
+if not window_based: #calculate SEs using a block jackknife
     df_pair_blocks = pd.DataFrame(pair_matrix_blockJN, columns=[
                        'PairIndividuals', 'IBS2', 'IBS0', 'P1', 'P0', 'NSNPs'])
     df_pair_blocks = df_pair_blocks.astype(dtype={
@@ -385,7 +397,7 @@ df_to_print['1st_Type'] = np.select(
 df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown','P0_mean','Nonnormalized_P0', 'Nonnormalized_P0_serr', '1st_Type', 'Perc_Win_1stdeg_P0','OverlapNSNPs','NSNPsXNorm']].to_csv(
     'Read_Results.tsv', index=False, sep='\t')
 
-fname = "./"+Arguments[0] + "_test*"
+fname = "./"+infile + "_test*"
 for filename in glob.glob(fname):
     os.remove(filename)
 print("READ analysis finished. Please check Read_Results.tsv for results!")
