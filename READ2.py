@@ -38,9 +38,6 @@ Options when running READv2:
 
 """
 
-print("    ===Thank you for using Relationship Estimation from Ancient DNA version 2 (READv2)===    ", end='\n\n')
-
-
 # turn of interactive plotting, does not show the plot unless plt.show() is used.
 plt.ioff()
 
@@ -115,26 +112,31 @@ List_individuals = []
 previous_window = 0
 snp_count = 0
 
-parser = OptionParser(usage=usage)
+parser = OptionParser()
 parser.add_option("-i","--input",action="store",type='string',dest='infile',help="Prefix of input Plink bed/bim/fam files")
-parser.add_option("-n","--norm_method",action="store",type='string',dest='norm_method',help="Normalization method (either 'mean', 'median', 'max' or 'value')")
+parser.add_option("-n","--norm_method",action="store",type='string',dest='norm_method',help="Normalization method (either 'mean', 'median', 'max' or 'value')", default='median')
 parser.add_option("--norm_value", action="store",type="float", dest="norm_value",help="User-specified normalization value",default=0.0)
 parser.add_option("--window_size", action="store",type="int", dest="window_size",help="Window size (default 5000000)",default=5000000)
 parser.add_option("--window_est", action="store_true", dest="window_based",help="Window based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)",default=False)
-parser.add_option("--2pow", action="store_true", dest="2powthresh",help="Use alternative classification thresholds",default=False)
-parser.add_option("-h","--help", action="store_true", dest="print_help",help="Print help",default=False)
+parser.add_option("--2pow", action="store_true", dest="twopow_thresh",help="Use alternative classification thresholds",default=False)
 parser.add_option("-v","--version", action="store_true", dest="print_vers",help="Print version",default=False)
 
-if print_help:
-    print(Usage)
-    sys.exit(0)
+(options, args) = parser.parse_args()
 
-if print_vers:
+if options.print_vers:
     print(VERSION)
     sys.exit(0)
 
 
-if norm_method not in ["median", "mean", "max", "value"]):
+print("    ===Thank you for using Relationship Estimation from Ancient DNA version 2 (READv2)===    ", end='\n\n')
+
+norm_method=options.norm_method
+norm_value=options.norm_value
+infile=options.infile
+window_based=options.window_based
+window_size=options.window_size
+
+if norm_method not in ["median", "mean", "max", "value"]:
     print("No valid standardization method specified! Using the default method (i.e. median).")
     norm_method='median'
     
@@ -142,7 +144,7 @@ if norm_method=='value' and norm_value<=0:
     print('User-specified normalization value chosen but no valid value provided!!!')
     sys.exit(1)
 
-if 2powthresh: #use updated degree thresholds
+if options.twopow_thresh: #use updated degree thresholds
     deg_thresholds = [1-1/(2**4.5),1-1/(2**3.5),1-1/(2**2.5),1-1/(2**1.5)]
 
 plink_file = plinkfile.open(infile)
@@ -155,10 +157,16 @@ if len(sample_list)<2:
     print("At least two individuals are required to run READ")
     sys.exit(1)
 
-if len(famlines)<4 and norm_method=="median":
+if len(sample_list)<4 and norm_method=="median":
 	print('Warning: Normalization using the median can be problematic for small sample sizes.')
 
 # locus.bp_position -> base pair position, locus.allele* gives the alleles in that position.
+
+print('Window size: %s' %window_size)
+if window_based:
+     print('Calculating P0 in windows across the genome and using the mean P0 for classification, the reported standard error is the SE of that mean.')
+else:
+     print('Calculating one genome-wide P0 value and using a block-jackknife to estimate the standard error.')
 
 start_time = time.time()
 tmp_list = []
