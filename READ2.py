@@ -85,7 +85,6 @@ def blockJN_SE(x):
 
 Arguments = sys.argv[1:]
 norm_method = "median"
-norm_value = ''
 window_size = 5000000 #default value chosen to correspond to commonly used blockJN block sizes, Readv1 default was 1000000
 window_size_1stdeg = 20000000
 deg_thresholds = [0.96875,0.90625,0.8125,0.625]
@@ -139,6 +138,10 @@ window_size=options.window_size
 if norm_method not in ["median", "mean", "max", "value"]:
     print("No valid standardization method specified! Using the default method (i.e. median).")
     norm_method='median'
+
+if norm_value:
+    norm_method='value'
+    print('User-specified normalization value provided.')
     
 if norm_method=='value' and norm_value<=0:
     print('User-specified normalization value chosen but no valid value provided!!!')
@@ -206,6 +209,9 @@ for key in keys:
 
             pair_dict[pair]=0
 
+            if len(nan_indices)==len(pairwise):
+                print("!!! Warning: no overlapping SNPs for the pair %s. They won't be part of the output files." %pair)
+
             arr = pairwise
             if not window_based:
                 Pair_Calc(arr, pair_matrix)
@@ -263,15 +269,23 @@ df_pair_1stdeg = df_pair_1stdeg.astype(dtype={
 
 del locus_list, plink_file, pair_matrix, ind_dict, pair_dict
 
-df_pair['2AlleleDiffMeanPerc'] = df_pair.groupby(
+df_pair['TwoAlleleDiffMeanPerc'] = df_pair.groupby(
     ['PairIndividuals'])['P0'].transform('mean')
 
+zero_pairs=df_pair[df_pair.TwoAlleleDiffMeanPerc==0]['PairIndividuals']
+for zp in zero_pairs:
+    print('Warning: The pair %s seems completely identical. Please check if this is a duplicate!' %zp)
+
 if (norm_method == "median"):
-    norm_value = median(df_pair['2AlleleDiffMeanPerc'])
+    norm_value = median(df_pair['TwoAlleleDiffMeanPerc'])
 elif (norm_method == "mean"):
-    norm_value = mean(df_pair['2AlleleDiffMeanPerc'])
+    norm_value = mean(df_pair['TwoAlleleDiffMeanPerc'])
 elif (norm_method == "max"):
-    norm_value = max(df_pair['2AlleleDiffMeanPerc'])
+    norm_value = max(df_pair['TwoAlleleDiffMeanPerc'])
+
+if norm_value==0.0:
+    print("!!! Normalization value is zero. Are many individuals duplicates? Terminating normalization, please fix and rerun READ !!!")
+    sys.exit(1)
 
 start_time = time.time()
 df_pair['Norm2AlleleDiff'] = df_pair['P0'] / norm_value
