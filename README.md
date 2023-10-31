@@ -21,7 +21,8 @@ and PLINKIO library can be installed with the following pip command afterwards:
     pip install plinkio
 This way, the PLINKIO library will be added to the environment, and READv2 will be ready to use.
 
-Quite the conda environment with
+Quit the conda environment with
+
     conda deactivate
   
 
@@ -50,20 +51,20 @@ This runs the READv2 script in default settings. The results of your READv2 anal
 
 Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates (plots are only produced for less than 1000 pairs of individuals). meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see below).
 
-#### Options ####
+#### Command line options ####
 
 Options when running READv2:
 
-\t -i, --input_file <val>\tInput file prefix (required). The current READ version only supports Plink bed/bim/fam files.
-\t -n, --norm_method <val>\tNormalization method (either 'mean', 'median', 'max' or 'value').
-\t\t\tmedian (default) - assuming that most pairs of compared individuals are unrelated, READ uses the median across all pairs for normalization.
-\t\t\tmean - READ uses the mean across all pairs for normalization, this would be more sensitive to outliers in the data (e.g. recent migrants or identical twins)
-\t\t\tmax - READ uses the maximum across all pairs for normalization. This should be used to test trios where both parents are supposed to be unrelated but the offspring is a first degree relative to both others.
-\t\t\tvalue - READ uses a user-defined value for normalization. This can be used if the value from another population should be used for normalization. That would be useful if only two individuals are available for the test population. Normalization value needs to be provided through --norm_value
-\t --window_size <val>\tChange window size for block jackknife or for window-based P0 estimates (as in READv1), default: 5000000
-\t --window_est\tWindow based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)
-\t -h, --help\tPrint help message
-\t -v, --version\tPrint version
+* `-i`, `--input_file` *val* -- Input file prefix (required). The current READ version only supports Plink bed/bim/fam files.
+* `-n`, `--norm_method` *val* -- Normalization method (either 'mean', 'median', 'max' or 'value').
+   * `median` (default) -- assuming that most pairs of compared individuals are unrelated, READ uses the median across all pairs for normalization.
+   * `mean` -- READ uses the mean across all pairs for normalization, this would be more sensitive to outliers in the data (e.g. recent migrants or identical twins)
+   * `max` -- READ uses the maximum across all pairs for normalization. This should be used to test trios where both parents are supposed to be unrelated but the offspring is a first degree relative to both others.
+   * `value` -- READ uses a user-defined value for normalization. This can be used if the value from another population should be used for normalization. That would be useful if only two individuals are available for the test population. Normalization value needs to be provided through --norm_value
+* `--window_size` *val* -- Change window size for block jackknife or for window-based P0 estimates (as in READv1), default: 5000000
+* `--window_est` -- Window based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)
+* `-h`, `--help` -- Print help message
+* `-v`, `--version` -- Print version
 
 #### Normalization ####
 
