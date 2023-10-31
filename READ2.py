@@ -325,6 +325,8 @@ df_P0.sort_values(by=['P0'],inplace = True)
 df_P0 = df_P0.reset_index()
 
 
+means2Allele_Diff_Normalized['theta'] = 1 - means2Allele_Diff_Normalized['Norm2AlleleDiff']
+
 
 #means2Allele_Diff_Normalized = means2Allele_Diff_Normalized.astype(
 #    dtype={'Norm2AlleleDiff': np.float16, 'StError_2Allele_Norm': np.float16, 'Nonnormalized_P0': np.float16, 'Nonnormalized_P0_serr': np.float16})
@@ -394,7 +396,7 @@ values_Zdown = [
 
 df_to_print = pd.DataFrame(
     data={'PairIndividuals': means2Allele_Diff_Normalized.index.get_level_values(0).values, 'P0_mean': means2Allele_Diff_Normalized['Norm2AlleleDiff'],
-           'Perc_Win_1stdeg_P0': means2Allele_Diff_Normalized['Perc_P0'], 'OverlapNSNPs': means2Allele_Diff_Normalized['OverlapNSNPs'], 'Nonnormalized_P0':means2Allele_Diff_Normalized['Nonnormalized_P0'], 'Nonnormalized_P0_serr':means2Allele_Diff_Normalized['Nonnormalized_P0_serr'], 'NSNPsXNorm': means2Allele_Diff_Normalized['NSNPsXNorm'] })
+           'Perc_Win_1stdeg_P0': means2Allele_Diff_Normalized['Perc_P0'], 'OverlapNSNPs': means2Allele_Diff_Normalized['OverlapNSNPs'], 'Nonnormalized_P0':means2Allele_Diff_Normalized['Nonnormalized_P0'], 'Nonnormalized_P0_serr':means2Allele_Diff_Normalized['Nonnormalized_P0_serr'], 'NSNPsXNorm': means2Allele_Diff_Normalized['NSNPsXNorm'], 'KinshipCoefficient': means2Allele_Diff_Normalized['theta'] })
 
 
 df_to_print['Rel'] = np.select(
@@ -422,7 +424,7 @@ df_to_print['1st_Type'] = np.select(
     filters_first_Deg, values_first_deg, default="N/A")
 
 
-df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown','P0_mean','Nonnormalized_P0', 'Nonnormalized_P0_serr', '1st_Type', 'Perc_Win_1stdeg_P0','OverlapNSNPs','NSNPsXNorm']].to_csv(
+df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown','P0_mean','Nonnormalized_P0', 'Nonnormalized_P0_serr', '1st_Type', 'Perc_Win_1stdeg_P0','OverlapNSNPs','NSNPsXNorm','KinshipCoefficient']].to_csv(
     'Read_Results.tsv', index=False, sep='\t')
 
 fname = "./"+infile + "_test*"
