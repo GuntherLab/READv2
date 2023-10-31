@@ -10,7 +10,7 @@
 * PLINKIO library
 * Unix-like operating system
 
-The required packages and libraries can be downloaded and installed with the following conda command:
+To make sure all these dependencies are available, we suggest to set up a conda environment for READv2. The required packages and libraries can be downloaded and installed with the following conda command:
 
     conda create -n readv2 python=3.9 pandas=1.3.1 numpy=1.21.1 pip=22.3.1
 and the environment can be activated by the
@@ -20,19 +20,50 @@ and PLINKIO library can be installed with the following pip command afterwards:
 
     pip install plinkio
 This way, the PLINKIO library will be added to the environment, and READv2 will be ready to use.
+
+Quite the conda environment with
+    conda deactivate
   
 
 ## How to use READv2? ##
 
 ### Running READv2 ###
 
-Assume you have READv2 and a pair of files example.bed, example.bim and example.fam in your current directory, then you can simply run READv2 like this (window-based approach):
+READv2 assumes pseudohaploid data which means that all individuals in the input file are coded as completely homozygous. It is a quite common approach in aDNA research to obtain such data by randomly sampling a sequencing read per SNP site (using a pre-defined panel of SNP sites). Implementations of this approach can be found in ANGSD and SequenceTools. Common file formats for genotype data are VCF, Eigenstrat or various Plink formats. Plink, vcftools, PGDSpider or convertf can be used to convert between these formats.
 
-    python READ2.py example 
+The input for READ is a pair of files in Plink's TPED/TFAM format containing information on the individuals and their genotypes. Please note that you should use a single file pair per test population (you can use Plink's --keep to restrict the individuals to your population of interest). Plink can be used to filter and manipulate files. Make sure to exclude non-polymorphic and low frequency variants (e.g. --maf 0.01).
 
-This runs the READ script in default settings. The results of your READ analysis can be found in the two files READ_results and meansP0_AncientDNA_normalized. The main result file is READ_results. It contains four columns: the pair of individuals, the normalized mean P0 score for that pair and two columns showing how many standard errors that normalized mean P0 score is from a higher class of genetic difference (Z_upper, third column = distance to lower degrees of relationship) and a lower class of genetic difference (Z_lower, fourth column = distance to higher degrees of relationship). These values can be used to assess the certainty of the classification. We observed in our simulations that false classifications were enriched when the normalized mean P0 score were less than one standard error from the nearest threshold (i.e. |Z|<1). Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates.
+Assume you have downloaded READv2 and a group of files example.bed, example.bim and example.fam in your current directory, then you can simply run READv2 like this:
 
-meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see below).
+    python READ2.py -i example 
+
+This runs the READv2 script in default settings. The results of your READv2 analysis can be found in the two files Read_Results.tsv and meansP0_AncientDNA_normalized. The main result file is Read_Results.tsv. It contains a number of columns: 
+ * the pair of individuals, the predicted relationship
+ * two columns showing how many standard errors that normalized mean P0 score is from a higher class of genetic difference (Z_upper, third column = distance to lower degrees of relationship) and a lower class of genetic difference (Z_lower, fourth column = distance to higher degrees of relationship) These values can be used to assess the certainty of the classification. We observed in our simulations that false classifications were enriched when the normalized mean P0 score were less than one standard error from the nearest threshold (i.e. |Z|<1).
+ * the normalized mean P0 score for the pair  
+ * the non-normalized mean P0 score for the pair
+ * the non-normalized standard error of the mean P0
+ * for 1st degree relatives whether they are siblings or parent-offspring (if sufficient data is included)
+ * The percentage of windows
+ * The number of overlapping SNPs per pair
+ * The number of overlapping SNPs per pair (number of overlapping SNPs times the normalization value assumed to represent an unrelated pair for the population)
+
+Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates (plots are only produced for less than 1000 pairs of individuals). meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see below).
+
+#### Options ####
+
+Options when running READv2:
+
+\t -i, --input_file <val>\tInput file prefix (required). The current READ version only supports Plink bed/bim/fam files.
+\t -n, --norm_method <val>\tNormalization method (either 'mean', 'median', 'max' or 'value').
+\t\t\tmedian (default) - assuming that most pairs of compared individuals are unrelated, READ uses the median across all pairs for normalization.
+\t\t\tmean - READ uses the mean across all pairs for normalization, this would be more sensitive to outliers in the data (e.g. recent migrants or identical twins)
+\t\t\tmax - READ uses the maximum across all pairs for normalization. This should be used to test trios where both parents are supposed to be unrelated but the offspring is a first degree relative to both others.
+\t\t\tvalue - READ uses a user-defined value for normalization. This can be used if the value from another population should be used for normalization. That would be useful if only two individuals are available for the test population. Normalization value needs to be provided through --norm_value
+\t --window_size <val>\tChange window size for block jackknife or for window-based P0 estimates (as in READv1), default: 5000000
+\t --window_est\tWindow based estimate of P0 (as opposed to the genome-wide estimate, default in READv2)
+\t -h, --help\tPrint help message
+\t -v, --version\tPrint version
 
 #### Normalization ####
 
