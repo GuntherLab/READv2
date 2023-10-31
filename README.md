@@ -1,4 +1,4 @@
-# Relationship Estimation from Ancient DNA (READv2) #
+# Relationship Estimation from Ancient DNA version 2 (READv2) #
 
 # PLEASE NOTE: This repository has been set to public to have a version of record for Erkin Alaçamlı's MSc thesis. READv2 development is still ongoing and we do not recommend to use it at this point. The README below might also be incomplete. #
 
