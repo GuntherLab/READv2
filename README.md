@@ -1,7 +1,5 @@
 # Relationship Estimation from Ancient DNA version 2 (READv2) #
 
-# PLEASE NOTE: This repository has been set to public to have a version of record for Erkin Alaçamlı's MSc thesis. READv2 development is still ongoing and we do not recommend to use it at this point. The README below might also be incomplete. #
-
 ## Requirements ##
 
 * Python 3.7 or higher
@@ -38,19 +36,7 @@ Assume you have downloaded READv2 and a group of files example.bed, example.bim 
 
     python READ2.py -i example 
 
-This runs the READv2 script in default settings. The results of your READv2 analysis can be found in the two files Read_Results.tsv and meansP0_AncientDNA_normalized. The main result file is Read_Results.tsv. It contains a number of columns: 
- * the pair of individuals, the predicted relationship
- * two columns showing how many standard errors that normalized mean P0 score is from a higher class of genetic difference (Z_upper, third column = distance to lower degrees of relationship) and a lower class of genetic difference (Z_lower, fourth column = distance to higher degrees of relationship) These values can be used to assess the certainty of the classification. We observed in our simulations that false classifications were enriched when the normalized mean P0 score were less than one standard error from the nearest threshold (i.e. |Z|<1).
- * the normalized mean P0 score for the pair  
- * the non-normalized mean P0 score for the pair
- * the non-normalized standard error of the mean P0
- * for 1st degree relatives whether they are siblings or parent-offspring (if sufficient data is included)
- * The percentage of 20 Mbp windows not classified as first or second degree.
- * The number of overlapping SNPs per pair
- * The number of overlapping SNPs per pair (*number of overlapping SNPs* times *the normalization value assumed to represent an unrelated pair for the population*)
- * The kinship coefficient theta (1 - *normalized mean P0*)
-
-Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates (plots are only produced for less than 1000 pairs of individuals). meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see below).
+This runs the READv2 script in default settings. 
 
 #### Command line options ####
 
@@ -79,3 +65,20 @@ This default setting (median of the sample -- **median**) may not be the best ch
 [READv1](https://bitbucket.org/tguenther/read/) used a default window size of 1000000 bp which means that the genome was split into non-overlapping windows of that size. P0 was then calculated per window and the genome-wide average across all windows was used as test statistic for classification. Standard errors were calculated as the standard error of that mean. During the development of READv2, we compared performance for different window sizes as well as a genome-wide estimate (i.e. calculating a single value across all sites without splitting the genome into windows). We observed that the genome-wide approach performed slightly better than the different window sizes which is why we decided to make it default for READv2. To estimate standard errors, we use a block-jackknife approach and blocks of 5000000 bp as commonly used in human population genetics. This block size can be changes with `--window_size`. Users who with to use the window-based approach can do so by using the command line options `--window_est` and `--window_size`.
 
 Note that for the differentiation between parent-offspring and siblings, we use a different window size of 20000000 bp.
+
+#### Results ####
+
+The results of your READv2 analysis can be found in the two files Read_Results.tsv and meansP0_AncientDNA_normalized. The main result file is Read_Results.tsv. It contains a number of columns: 
+ * the pair of individuals
+ * the predicted relationship, **Note:** Third degree classifications are only made with sufficient amounts of overlapping SNPs. Otherwise individuals with point estimates falling into this range are classified as "Unrelated" as it is not possible to distinguish them confidently.
+ * two columns showing how many standard errors that normalized mean P0 score is from a higher class of genetic difference (Z_upper, third column = distance to lower degrees of relationship) and a lower class of genetic difference (Z_lower, fourth column = distance to higher degrees of relationship) These values can be used to assess the certainty of the classification. We observed in our simulations that false classifications were enriched when the normalized mean P0 score were less than one standard error from the nearest threshold (i.e. |Z|<1).
+ * the normalized mean P0 score for the pair  
+ * the non-normalized mean P0 score for the pair
+ * the non-normalized standard error of the mean P0
+ * for 1st degree relatives whether they are siblings or parent-offspring, **Note:** This classification is only made for sufficient amounts of overlapping data.
+ * The percentage of 20 Mbp windows not classified as first or second degree.
+ * The number of overlapping SNPs per pair
+ * The number of overlapping SNPs per pair (*number of overlapping SNPs* times *the normalization value assumed to represent an unrelated pair for the population*)
+ * The kinship coefficient theta (1 - *normalized mean P0*)
+
+Additionally, a graphical representation of the results is produced (READ_results_plot.pdf) showing the results as well as uncertainties of individual estimates (plots are only produced for less than 1000 pairs of individuals). meansP0_AncientDNA_normalized is mainly for READ's internal use but it can be used for normalization with a user-defined value (see above).
