@@ -343,17 +343,17 @@ if num_pairs<=1000:
     boxplot.axhline(norm_value*deg_thresholds[1], color="purple", alpha=0.2, lw=10)
     boxplot.axhline(norm_value*deg_thresholds[1], color="black", alpha=0.5, linestyle="--")
     # why use normalized values while you have nonnormalized values in the graph.
-    boxplot.text(0.55, (norm_value*deg_thresholds[0])-0.005,
+    boxplot.text(0.55, (norm_value*deg_thresholds[1])*0.95,
              "2nd degree", size=9, color="purple")
     # hor. lines for 1st degree
     boxplot.axhline(norm_value*deg_thresholds[2], color="purple", alpha=0.2, lw=10)
     boxplot.axhline(norm_value*deg_thresholds[2], color="black", alpha=0.5, linestyle="--")
-    boxplot.text(0.55, (norm_value*deg_thresholds[1])-0.005,
+    boxplot.text(0.55, (norm_value*deg_thresholds[2])*0.95,
              "1st degree", size=9, color="purple")
     # hor.lines for Identical/twins
     boxplot.axhline(norm_value*deg_thresholds[3], color="purple", alpha=0.2, lw=10)
     boxplot.axhline(norm_value*deg_thresholds[3], color="black", alpha=0.5, linestyle="--")
-    boxplot.text(0.55, (norm_value*deg_thresholds[2])+0.005,
+    boxplot.text(0.55, (norm_value*deg_thresholds[3])*0.95,
              "Identical/Twin", size=9, color="purple")
     fig = boxplot.get_figure()
     fig.savefig('READ.pdf', format="pdf")
