@@ -19,7 +19,7 @@ and PLINKIO library can be installed with the following pip command afterwards:
     pip install plinkio
 This way, the PLINKIO library will be added to the environment, and READv2 will be ready to use.
 
-Quit the conda environment with
+After you are done using READv2, you can quit the conda environment with
 
     conda deactivate
   
