@@ -5,12 +5,13 @@
 * Python 3.7 or higher
 * Python pandas library
 * Python NumPy library
+* Python Matplotlib library
 * PLINKIO library
 * Unix-like operating system
 
-To make sure all these dependencies are available, we suggest setting up a conda environment for READv2. The required packages and libraries can be downloaded and installed with the following conda command:
+To make sure all these dependencies are available, we suggest setting up a conda environment for READv2. The required packages and libraries can be downloaded and installed with the following conda command (more recent versions of these software can be used as well, older versions are not guaranteed to work as intended):
 
-    conda create -n readv2 python=3.9 pandas=1.3.1 numpy=1.21.1 pip=22.3.1
+    conda create -n readv2 python=3.7 pandas=1.1.1 numpy=1.18.3 pip=22.3.1 matplotlib=3.5.3
 and the environment can be activated by the
 
     conda activate readv2
