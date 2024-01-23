@@ -16,7 +16,7 @@ import statistics
 import time
 from optparse import OptionParser
 
-VERSION='v1.99'
+VERSION='v2.00'
 
 Usage = """
 
