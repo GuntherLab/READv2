@@ -11,7 +11,7 @@
 
 To make sure all these dependencies are available, we suggest setting up a conda environment for READv2. The required packages and libraries can be downloaded and installed with the following conda command (more recent versions of these software can be used as well, older versions are not guaranteed to work as intended):
 
-    conda create -n readv2 python=3.7 pandas=1.1.1 numpy=1.18.3 pip=22.3.1 matplotlib=3.5.3
+    conda create -n readv2 python=3 pandas numpy pip matplotlib
 and the environment can be activated by the
 
     conda activate readv2
