@@ -150,8 +150,15 @@ if options.twopow_thresh: #use updated degree thresholds
     deg_thresholds = [1-1/(2**4.5),1-1/(2**3.5),1-1/(2**2.5),1-1/(2**1.5)]
 
 plink_file = plinkfile.open(infile)
-
+locus_list = plink_file.get_loci()
 sample_list = plink_file.get_samples()
+
+#Check for pseuodhaploidy, if any heterozygous site is detected, the program quits with an error message.
+for row in plink_file:
+    if(1 in row):
+        print('Heterozygous site detected. Please make sure your input files are pseudo-haploid.')
+        sys.exit(1)
+    
 for sample in sample_list:
     list_all_individuals.append(sample.iid)
 
@@ -180,6 +187,7 @@ plink_file = plinkfile.open(infile + "_test")
 i = 0
 # prep. np arrays for each individual
 locus_list = plink_file.get_loci()
+
 locus_pos = np.array(list(map(lambda d: d.bp_position, locus_list)))
 locus_pos = np.floor_divide(locus_pos, window_size)
 windows = np.where(locus_pos[:-1] != locus_pos[1:])[0]
