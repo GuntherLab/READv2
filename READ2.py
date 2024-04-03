@@ -212,7 +212,7 @@ for key in keys:
             pairwise = 1 * (ind_dict[key] == ind_dict[key2])
             pairwise[nan_indices] = -1
 
-            pair=key+"-_-"+key2
+            pair=key+","+key2
 
             pair_dict[pair]=0
 
