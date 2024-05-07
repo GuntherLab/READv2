@@ -86,7 +86,7 @@ Arguments = sys.argv[1:]
 norm_method = "median"
 window_size = 5000000 #default value chosen to correspond to commonly used blockJN block sizes, Readv1 default was 1000000
 window_size_1stdeg = 20000000
-deg_thresholds = [0.96875,0.90625,0.8125,0.625]
+deg_thresholds = [0.953125,0.90625,0.8125,0.625]
 effectiveSNP_cutoff_first = 10000
 effectiveSNP_cutoff_third = 5000
 window_based = False
@@ -150,8 +150,15 @@ if options.twopow_thresh: #use updated degree thresholds
     deg_thresholds = [1-1/(2**4.5),1-1/(2**3.5),1-1/(2**2.5),1-1/(2**1.5)]
 
 plink_file = plinkfile.open(infile)
-
+locus_list = plink_file.get_loci()
 sample_list = plink_file.get_samples()
+
+#Check for pseuodhaploidy, if any heterozygous site is detected, the program quits with an error message.
+for row in plink_file:
+    if(1 in row):
+        print('Heterozygous site detected. Please make sure your input files are pseudo-haploid.')
+        sys.exit(1)
+    
 for sample in sample_list:
     list_all_individuals.append(sample.iid)
 
@@ -180,6 +187,7 @@ plink_file = plinkfile.open(infile + "_test")
 i = 0
 # prep. np arrays for each individual
 locus_list = plink_file.get_loci()
+
 locus_pos = np.array(list(map(lambda d: d.bp_position, locus_list)))
 locus_pos = np.floor_divide(locus_pos, window_size)
 windows = np.where(locus_pos[:-1] != locus_pos[1:])[0]
@@ -204,7 +212,7 @@ for key in keys:
             pairwise = 1 * (ind_dict[key] == ind_dict[key2])
             pairwise[nan_indices] = -1
 
-            pair=key+key2
+            pair=key+","+key2
 
             pair_dict[pair]=0
 
