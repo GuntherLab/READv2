@@ -205,7 +205,7 @@ num_pairs=len(keys)*(len(keys)-1)/2
 pair_count=0
 for key in keys:
     for key2 in keys:
-        if (not (key == key2) and not (key2+key in pair_dict.keys())):
+        if (not (key == key2) and not ((key2+','+key) in pair_dict.keys())):
             nan_indices = np.union1d(np.where(
                 ind_dict[key] == 3), np.where(
                 ind_dict[key2] == 3))
