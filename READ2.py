@@ -372,13 +372,16 @@ else:
 
 start_time = time.time()
 filters = [
+    (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[0]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[1]) & (means2Allele_Diff_Normalized.NSNPsXNorm < effectiveSNP_cutoff_third),
     (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[0]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[1]) & (means2Allele_Diff_Normalized.NSNPsXNorm >= effectiveSNP_cutoff_third),
     (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[1]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[2]),
     (means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[2]) & (means2Allele_Diff_Normalized.Norm2AlleleDiff >= deg_thresholds[3]),
     means2Allele_Diff_Normalized.Norm2AlleleDiff <= deg_thresholds[3]
 ]
-values_Rel = ["Third Degree", "Second Degree", "First Degree",'IdenticalTwins/SameIndividual']
+values_Rel = ["Unrelated/Consistent with Third Degree","Third Degree", "Second Degree", "First Degree",'IdenticalTwins/SameIndividual']
 values_Zup = [
+    np.absolute((deg_thresholds[0]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+                StError_2Allele_Norm.Norm2AlleleDiff),
     np.absolute((deg_thresholds[0]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
     np.absolute((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
@@ -389,6 +392,8 @@ values_Zup = [
                 StError_2Allele_Norm.Norm2AlleleDiff)
 ]
 values_Zdown = [
+    np.absolute((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
+                StError_2Allele_Norm.Norm2AlleleDiff),
     np.absolute((deg_thresholds[1]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
                 StError_2Allele_Norm.Norm2AlleleDiff),
     np.absolute((deg_thresholds[2]-means2Allele_Diff_Normalized.Norm2AlleleDiff) /
