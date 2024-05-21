@@ -154,10 +154,10 @@ locus_list = plink_file.get_loci()
 sample_list = plink_file.get_samples()
 
 #Check for pseuodhaploidy, if any heterozygous site is detected, the program quits with an error message.
-for row in plink_file:
-    if(1 in row):
-        print('Heterozygous site detected. Please make sure your input files are pseudo-haploid.')
-        sys.exit(1)
+# for row in plink_file:
+#     if(1 in row):
+#         print('Heterozygous site detected. Please make sure your input files are pseudo-haploid.')
+#         sys.exit(1)
     
 for sample in sample_list:
     list_all_individuals.append(sample.iid)
