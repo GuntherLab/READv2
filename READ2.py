@@ -334,6 +334,9 @@ df_P0 = df_P0.reset_index()
 
 
 means2Allele_Diff_Normalized['theta'] = 1 - means2Allele_Diff_Normalized['Norm2AlleleDiff']
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] + (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] - (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min_max']=means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min'].astype(str)+','+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max'].astype(str)
 
 
 #means2Allele_Diff_Normalized = means2Allele_Diff_Normalized.astype(
@@ -409,7 +412,10 @@ values_Zdown = [
 
 df_to_print = pd.DataFrame(
     data={'PairIndividuals': means2Allele_Diff_Normalized.index.get_level_values(0).values, 'P0_mean': means2Allele_Diff_Normalized['Norm2AlleleDiff'],
-           'Perc_Win_1stdeg_P0': means2Allele_Diff_Normalized['Perc_P0'], 'OverlapNSNPs': means2Allele_Diff_Normalized['OverlapNSNPs'], 'Nonnormalized_P0':means2Allele_Diff_Normalized['Nonnormalized_P0'], 'Nonnormalized_P0_serr':means2Allele_Diff_Normalized['Nonnormalized_P0_serr'], 'NSNPsXNorm': means2Allele_Diff_Normalized['NSNPsXNorm'], 'KinshipCoefficient': means2Allele_Diff_Normalized['theta'] })
+           'Perc_Win_1stdeg_P0': means2Allele_Diff_Normalized['Perc_P0'], 'OverlapNSNPs': means2Allele_Diff_Normalized['OverlapNSNPs'], 
+           'Nonnormalized_P0':means2Allele_Diff_Normalized['Nonnormalized_P0'], 'Nonnormalized_P0_serr':means2Allele_Diff_Normalized['Nonnormalized_P0_serr'], 
+           'NSNPsXNorm': means2Allele_Diff_Normalized['NSNPsXNorm'], 'KinshipCoefficient': means2Allele_Diff_Normalized['theta'],
+           'KinshipCoefficient_95percCI[min,max]':means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min_max'] })
 
 
 df_to_print['Rel'] = np.select(
@@ -437,7 +443,7 @@ df_to_print['1st_Type'] = np.select(
     filters_first_Deg, values_first_deg, default="N/A")
 
 
-df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown','P0_mean','Nonnormalized_P0', 'Nonnormalized_P0_serr', '1st_Type', 'Perc_Win_1stdeg_P0','OverlapNSNPs','NSNPsXNorm','KinshipCoefficient']].to_csv(
+df_to_print[['PairIndividuals', 'Rel', 'Zup', 'Zdown','P0_mean','Nonnormalized_P0', 'Nonnormalized_P0_serr', '1st_Type', 'Perc_Win_1stdeg_P0','OverlapNSNPs','NSNPsXNorm','KinshipCoefficient','KinshipCoefficient_95percCI[min,max]']].to_csv(
     'Read_Results.tsv', index=False, sep='\t')
 
 fname = "./"+infile + "_test*"
