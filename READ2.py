@@ -334,8 +334,8 @@ df_P0 = df_P0.reset_index()
 
 
 means2Allele_Diff_Normalized['theta'] = 1 - means2Allele_Diff_Normalized['Norm2AlleleDiff']
-means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] + (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
-means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] - (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max']= 1.0 - means2Allele_Diff_Normalized['Norm2AlleleDiff'] + (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min']= 1.0 - means2Allele_Diff_Normalized['Norm2AlleleDiff'] - (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
 means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min_max']=means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min'].astype(str)+','+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max'].astype(str)
 
 
