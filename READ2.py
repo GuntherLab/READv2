@@ -16,7 +16,7 @@ import statistics
 import time
 from optparse import OptionParser
 
-VERSION='v2.00'
+VERSION='v2.01'
 
 Usage = """
 
@@ -46,12 +46,21 @@ def Pair_Calc(window, out_matrix):
     full_call = window.size
     full_call_var_corrected = full_call - missing
     if (full_call_var_corrected != 0):
-        valor = np.count_nonzero(window == 1)
-        IBS0 = np.count_nonzero(window == 0)
-        P0 = float(IBS0)/full_call_var_corrected
-        P2 = float(valor)/full_call_var_corrected
-        Line_info = [pair, valor, IBS0, P2, P0, full_call_var_corrected]
-        out_matrix.append(Line_info)
+	    if float(hetunion_indices.size) != 0: #if hets present, assign half the counts to P0 and the other half to P2
+	    	het = float(np.count_nonzero(window==2))/2 #half the number of hets detected
+	    	valor = np.count_nonzero(window == 1) + het
+	    	IBS0 = np.count_nonzero(window == 0) + het
+	    	P0 = float(IBS0)/full_call_var_corrected
+	    	P2 = float(valor)/full_call_var_corrected
+	    	Line_info = [pair, valor, IBS0, P2, P0, full_call_var_corrected]
+	    	out_matrix.append(Line_info)
+	    else:
+	    	valor = np.count_nonzero(window == 1)
+	    	IBS0 = np.count_nonzero(window == 0)
+	    	P0 = float(IBS0)/full_call_var_corrected
+	    	P2 = float(valor)/full_call_var_corrected
+	    	Line_info = [pair, valor, IBS0, P2, P0, full_call_var_corrected]
+	    	out_matrix.append(Line_info)
 
 
 def Perc_Calc(x):  # a function to calculate the proportion of windows that does not fall between deg_thresholds[2] and deg_thresholds[0] for each pair
@@ -209,7 +218,11 @@ for key in keys:
             nan_indices = np.union1d(np.where(
                 ind_dict[key] == 3), np.where(
                 ind_dict[key2] == 3))
+            hetunion_indices = np.union1d(np.where(
+                ind_dict[key] == 1), np.where(
+                ind_dict[key2] == 1))
             pairwise = 1 * (ind_dict[key] == ind_dict[key2])
+            pairwise[hetunion_indices] = 2
             pairwise[nan_indices] = -1
 
             pair=key+","+key2
@@ -218,6 +231,8 @@ for key in keys:
 
             if len(nan_indices)==len(pairwise):
                 print("!!! Warning: no overlapping SNPs for the pair %s. They won't be part of the output files." %pair)
+            if len(hetunion_indices)!=0:
+                print("!!! Warning: Heterozygous positions detected for the pair %s. They will be counted in half shares." %pair)
 
             arr = pairwise
             if not window_based:
@@ -334,8 +349,8 @@ df_P0 = df_P0.reset_index()
 
 
 means2Allele_Diff_Normalized['theta'] = 1 - means2Allele_Diff_Normalized['Norm2AlleleDiff']
-means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max']= 1.0 - means2Allele_Diff_Normalized['Norm2AlleleDiff'] + (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
-means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min']= 1.0 - means2Allele_Diff_Normalized['Norm2AlleleDiff'] - (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] + (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min']= means2Allele_Diff_Normalized['Norm2AlleleDiff'] - (1.96*means2Allele_Diff_Normalized['StError_2Allele_Norm'])
 means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min_max']=means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_min'].astype(str)+','+means2Allele_Diff_Normalized['KinshipCoefficient_95percCI_max'].astype(str)
 
 
