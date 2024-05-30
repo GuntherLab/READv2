@@ -9,7 +9,19 @@
 * PLINKIO library
 * Unix-like operating system
 
-To make sure all these dependencies are available, we suggest setting up a conda environment for READv2. The required packages and libraries can be downloaded and installed with the following conda command (more recent versions of these software can be used as well, older versions are not guaranteed to work as intended):
+## Installation ##
+### Installing the Dependencies ###
+#### 1. Installing the Dependencies with Bioconda ####
+You need a conda-compatible package manager (currently either micromamba, mamba, or conda) and the Bioconda channel already activated. For activating Bioconda channel, see this [page](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html).
+
+To create a new environment, you can run the following conda command(if you would like to use mamba or micromamba, the arguments are the same as conda version):
+
+    conda create --name envname kinship-read
+Or one can add the dependencies to an existing environment with the following command (the environment needs to be activated first):
+
+    conda install kinship-read
+#### 2. Setting Up a Custom Conda Environment ####
+Alternatively, one can set up their own conda environment. The required packages and libraries can be downloaded and installed with the following conda command (more recent versions of these software can be used as well, older versions are not guaranteed to work as intended):
 
     conda create -n readv2 python=3 pandas numpy pip matplotlib
 and the environment can be activated by the
@@ -20,11 +32,10 @@ and PLINKIO library can be installed with the following pip command afterwards:
     pip install plinkio
 This way, the PLINKIO library will be added to the environment, and READv2 will be ready to use.
 
-After you are done using READv2, you can quit the conda environment with
+### Cloning the GitHub Repository ###
+After the environment is set, one can clone the repository with the following command to their local machine:
 
-    conda deactivate
-  
-
+    git clone https://github.com/GuntherLab/READv2.git
 ## How to use READv2? ##
 
 ### Running READv2 ###
